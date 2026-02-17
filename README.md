@@ -1,36 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Email Cadence Monorepo
 
-## Getting Started
+This is a TypeScript monorepo implementing an **email cadence system** using:
 
-First, run the development server:
+- **Next.js** – Frontend  
+- **NestJS** – API backend  
+- **Worker folder** – Temporal.io workflows (mock/placeholder)
 
-```bash
+---
+
+## Monorepo Structure
+
+repo/
+├─ apps/
+│ ├─ web/ # Next.js frontend
+│ ├─ api/ # NestJS backend API
+│ └─ worker/ # Temporal.io worker folder (mock / placeholder)
+├─ package.json
+├─ tsconfig.base.json
+└─ README.md
+
+
+
+---
+
+## Installation
+
+git clone https://github.com/PiemEscy/repo.git
+cd repo
+npm install
+
+---
+
+## Start All Apps
+
+cd repo
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API Usage
 
-## Learn More
+- **Create a Cadence**
+POST /cadences
+Headers: Content-Type: application/json
+Body:
+{
+  "id": "cad_123",
+  "name": "Welcome Flow",
+  "steps": [
+    { "id": "1", "type": "SEND_EMAIL", "subject": "Welcome", "body": "Hello there" },
+    { "id": "2", "type": "WAIT", "seconds": 10 },
+    { "id": "3", "type": "SEND_EMAIL", "subject": "Follow up", "body": "Checking in" }
+  ]
+}
 
-To learn more about Next.js, take a look at the following resources:
+- **Start Enrollment**
+POST /enrollments
+Headers: Content-Type: application/json
+Body:
+{
+  "cadenceId": "cad_123",
+  "contactEmail": "user@example.com"
+}
+Workflow Logs (API console):
+{
+  "success": true,
+  "messageId": "mock-msg-5414",
+  "timestamp": 1771315355131
+}
+[SEND_EMAIL] To: user@example.com, Subject: Welcome, Body: Hello there
+[SEND_EMAIL] To: user@example.com, Subject: Follow up, Body: Checking in
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Start Enrollment**
+GET /enrollments/mock-<timestamp>
+Sample Response:
+{
+  "id": "mock-<timestamp>",
+  "cadenceId": "cad_123",
+  "contactEmail": "user@example.com",
+  "currentStepIndex": 2,
+  "stepsVersion": 1,
+  "status": "COMPLETED",
+  "steps": [ ... ],
+  "sentEmails": [
+    { "success": true, "messageId": "mock-msg-1234", "timestamp": 1676543212345 }
+  ]
+}
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Update a Running Enrollment**
+POST /enrollments/mock-<timestamp>/update-cadence
+Headers: Content-Type: application/json
+Body:
+{
+  "steps": [
+    { "id": "1", "type": "SEND_EMAIL", "subject": "Hello Again", "body": "Updated email" }
+  ]
+}
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Behavior:
+
+- Already completed steps remain completed.
+- Workflow continues from currentStepIndex.
+- stepsVersion is incremented.
+- Status is marked COMPLETED if new steps are fewer than currentStepIndex.
+
+
