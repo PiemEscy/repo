@@ -1,0 +1,20 @@
+{
+  "name": "repo",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run dev:web\" \"npm run dev:api\" \"npm run dev:worker\"",
+    "dev:web": "npm --prefix apps/web run dev",
+    "dev:api": "npm --prefix apps/api run start:dev",
+    "dev:worker": "npm --prefix apps/worker run dev"
+  },
+  "dependencies": {
+    "@temporalio/client": "^1.14.1",
+    "@temporalio/worker": "^1.14.1"
+  }
+}

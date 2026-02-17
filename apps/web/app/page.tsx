@@ -34,13 +34,12 @@ export default function Home() {
     JSON.stringify(defaultCadence, null, 2)
   );
   const [cadenceId, setCadenceId] = useState("");
-  const [contactEmail, setContactEmail] = useState("test@example.com");
+  const [contactEmail, setContactEmail] = useState("piemescy@gmail.com");
   const [enrollmentId, setEnrollmentId] = useState("");
   const [state, setState] = useState<EnrollmentState | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Poll enrollment state
   useEffect(() => {
     if (!enrollmentId) return;
 
@@ -101,6 +100,9 @@ export default function Home() {
 
   async function enroll() {
     try {
+      const cadence = parseCadenceSafely();
+      if (!cadence) return;
+
       const result = await apiFetch<{ id: string }>("/enrollments", {
         method: "POST",
         body: JSON.stringify({
